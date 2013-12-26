@@ -1,0 +1,19 @@
+{
+  "name": "usco-ctm-parser",
+  "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/usco/usco-ctm-parser.git"
+  },
+  "main": "CTMParser.js",
+  "dependencies": {},
+  "devDependencies": {
+    "jasmine-node": "",
+    "three": "~0.58.10",
+    "composite-detect": "0.0.3"
+  },
+  "scripts": {
+    "test": "jasmine-node specs/"
+  }
+}
