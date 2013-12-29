@@ -26,6 +26,8 @@ References:
   http://openctm.sourceforge.net/
 */
 
+var detectEnv = require("composite-detect");
+
 var CTM = CTM || {};
 
 CTM.CompressionMethod = {
@@ -42,17 +44,9 @@ CTM.File = function(stream){
   this.load(stream);
 };
 
-CTM.File.prototype.load = function(stream){
-  this.header = new CTM.FileHeader(stream);
-
-  this.body = new CTM.FileBody(this.header);
-  
-  this.getReader().read(stream, this.body);
-};
-
 CTM.File.prototype.getReader = function(){
   var reader;
-
+  console.log("this.header.compressionMethod",this.header.compressionMethod)
   switch(this.header.compressionMethod){
     case CTM.CompressionMethod.RAW:
       reader = new CTM.ReaderRAW();
@@ -66,6 +60,17 @@ CTM.File.prototype.getReader = function(){
   }
 
   return reader;
+};
+
+CTM.File.prototype.load = function(stream){
+  this.header = new CTM.FileHeader(stream);
+  console.log("header",this.header)
+
+  this.body = new CTM.FileBody(this.header);
+  
+  var reader = this.getReader();
+  console.log("reader",reader)
+  reader.read(stream, this.body);
 };
 
 CTM.FileHeader = function(stream){
@@ -652,3 +657,7 @@ CTM.Stream.prototype.readArrayFloat32 = function(array){
 
   return array;
 };
+
+
+if (detectEnv.isModule) module.exports = CTM;
+

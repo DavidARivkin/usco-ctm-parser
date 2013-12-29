@@ -8,17 +8,24 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.CTMLoader = function ( showStatus ) {
+var detectEnv = require("composite-detect");
 
+if (detectEnv.isModule) var CTM = require("./ctm");
+
+ module.exports = THREE.CTMParser;
+
+THREE.CTMParser = function ( showStatus ) {
+
+  this.outputs = ["geometry"]; //to be able to auto determine data type(s) fetched by parser
 	THREE.Loader.call( this, showStatus );
 
 };
 
-THREE.CTMLoader.prototype = Object.create( THREE.Loader.prototype );
+THREE.CTMParser.prototype = Object.create( THREE.Loader.prototype );
 
 // Load multiple CTM parts defined in JSON
 
-THREE.CTMLoader.prototype.loadParts = function( url, callback, parameters ) {
+THREE.CTMParser.prototype.loadParts = function( url, callback, parameters ) {
 
 	var scope = this;
 
@@ -77,132 +84,78 @@ THREE.CTMLoader.prototype.loadParts = function( url, callback, parameters ) {
 
 };
 
-// Load CTMLoader compressed models
+// Load CTMParser compressed models
 //  - parameters
-//		- url (required)
-//		- callback (required)
 
-THREE.CTMLoader.prototype.load = function( url, callback, parameters ) {
+function toArrayBuffer(buffer) {
+    var ab = new ArrayBuffer(buffer.length);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buffer.length; ++i) {
+        view[i] = buffer[i];
+    }
+    return ab;
+}
 
+THREE.CTMParser.prototype.parse = function( data, parameters ) {
 	var scope = this;
 
+  var parameters = parameters || {};
 	var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
 	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : true;
 
-	var xhr = new XMLHttpRequest(),
-		callbackProgress = null;
-
 	var length = 0;
+  //var binaryData = new Uint8Array(data);
+  //var binaryData = new Uint8Array( new ArrayBuffer(data) );
+  //var binaryData = new Buffer( new Uint8Array(data) );
+  
+//TODO: this is only temporary for 
+  var binaryData = toArrayBuffer(data)
+  binaryData = new Uint8Array(binaryData);
+  
+  var s = Date.now();
 
-	xhr.onreadystatechange = function() {
+	if ( parameters.useWorker ) {
 
-		if ( xhr.readyState === 4 ) {
+		var worker = new Worker( "js/loaders/ctm/CTMWorker.js" );
 
-			if ( xhr.status === 200 || xhr.status === 0 ) {
-
-				var binaryData = new Uint8Array(xhr.response);
-
-				var s = Date.now();
-
-				if ( parameters.useWorker ) {
-
-					var worker = new Worker( "js/loaders/ctm/CTMWorker.js" );
-
-					worker.onmessage = function( event ) {
-
-						var files = event.data;
-
-						for ( var i = 0; i < files.length; i ++ ) {
-
-							var ctmFile = files[ i ];
-
-                            				var e1 = Date.now();
-                            				// console.log( "CTM data parse time [worker]: " + (e1-s) + " ms" );
-
-							if ( useBuffers ) {
-
-								scope.createModelBuffers( ctmFile, callback );
-
-							} else {
-
-								scope.createModelClassic( ctmFile, callback );
-
-							}
-
-                            				var e = Date.now();
-                            				console.log( "model load time [worker]: " + (e-e1) + " ms, total: " + (e-s));
-
-						}
-
-
-					};
-
-					worker.postMessage( { "data": binaryData, "offsets": offsets } );
-
+		worker.onmessage = function( event ) {
+			var files = event.data;
+			for ( var i = 0; i < files.length; i ++ ) {
+				var ctmFile = files[ i ];
+				var e1 = Date.now();
+				// console.log( "CTM data parse time [worker]: " + (e1-s) + " ms" );
+				if ( useBuffers ) {
+					scope.createModelBuffers( ctmFile, callback );
 				} else {
-
-					for ( var i = 0; i < offsets.length; i ++ ) {
-
-						var stream = new CTM.Stream( binaryData );
-						stream.offset = offsets[ i ];
-
-						var ctmFile = new CTM.File( stream );
-
-						if ( useBuffers ) {
-
-							scope.createModelBuffers( ctmFile, callback );
-
-						} else {
-
-							scope.createModelClassic( ctmFile, callback );
-
-						}
-
-					}
-
-					//var e = Date.now();
-					//console.log( "CTM data parse time [inline]: " + (e-s) + " ms" );
-
+					scope.createModelClassic( ctmFile, callback );
 				}
+				var e = Date.now();
+				console.log( "model load time [worker]: " + (e-e1) + " ms, total: " + (e-s));
+			}
+		};
+	  worker.postMessage( { "data": binaryData, "offsets": offsets } );
+	} else {
+		for ( var i = 0; i < offsets.length; i ++ ) {
+			var stream = new CTM.Stream( binaryData );
 
+      //console.log("stream",stream)
+			stream.offset = offsets[ i ];
+      //console.log("stream offset", offsets[ i ])
+			var ctmFile = new CTM.File( stream );
+
+			if ( useBuffers ) {
+				scope.createModelBuffers( ctmFile, callback );
 			} else {
-
-				console.error( "Couldn't load [" + url + "] [" + xhr.status + "]" );
-
+				scope.createModelClassic( ctmFile, callback );
 			}
+		 }
+		var e = Date.now();
+		console.log( "CTM data parse time [inline]: " + (e-s) + " ms" );
+	 }
+} 
 
-		} else if ( xhr.readyState === 3 ) {
-
-			if ( callbackProgress ) {
-
-				if ( length === 0 ) {
-
-					length = xhr.getResponseHeader( "Content-Length" );
-
-				}
-
-				callbackProgress( { total: length, loaded: xhr.responseText.length } );
-
-			}
-
-		} else if ( xhr.readyState === 2 ) {
-
-			length = xhr.getResponseHeader( "Content-Length" );
-
-		}
-
-	}
-
-	xhr.open( "GET", url, true );
-	xhr.responseType = "arraybuffer";
-
-	xhr.send( null );
-
-};
-
-
-THREE.CTMLoader.prototype.createModelBuffers = function ( file, callback ) {
-
+THREE.CTMParser.prototype.createModelBuffers = function ( file, callback ) {
+  console.log("creating model buffers")
 	var Model = function ( ) {
 
 		var scope = this;
@@ -456,7 +409,7 @@ THREE.CTMLoader.prototype.createModelBuffers = function ( file, callback ) {
 
 };
 
-THREE.CTMLoader.prototype.createModelClassic = function ( file, callback ) {
+THREE.CTMParser.prototype.createModelClassic = function ( file, callback ) {
 
 	var Model = function ( ) {
 
@@ -670,3 +623,5 @@ THREE.CTMLoader.prototype.createModelClassic = function ( file, callback ) {
 	callback( new Model() );
 
 };
+
+if (detectEnv.isModule) module.exports = THREE.CTMParser;
