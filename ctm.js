@@ -27,6 +27,8 @@ References:
 */
 
 var detectEnv = require("composite-detect");
+if (detectEnv.isModule) var LZMA = require("./lzma");
+
 
 var CTM = CTM || {};
 
@@ -46,7 +48,7 @@ CTM.File = function(stream){
 
 CTM.File.prototype.getReader = function(){
   var reader;
-  console.log("this.header.compressionMethod",this.header.compressionMethod)
+  console.log("this.header.compressionMethod",this.header.compressionMethod,CTM.CompressionMethod.RAW, CTM.CompressionMethod.MG1, CTM.CompressionMethod.MG2)
   switch(this.header.compressionMethod){
     case CTM.CompressionMethod.RAW:
       reader = new CTM.ReaderRAW();
@@ -64,7 +66,7 @@ CTM.File.prototype.getReader = function(){
 
 CTM.File.prototype.load = function(stream){
   this.header = new CTM.FileHeader(stream);
-  console.log("header",this.header)
+  //console.log("header",this.header)
 
   this.body = new CTM.FileBody(this.header);
   

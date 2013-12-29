@@ -144,17 +144,19 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 			var ctmFile = new CTM.File( stream );
 
 			if ( useBuffers ) {
-				scope.createModelBuffers( ctmFile, callback );
+				result = scope.createModelBuffers( ctmFile );
 			} else {
-				scope.createModelClassic( ctmFile, callback );
+				result = scope.createModelClassic( ctmFile );
 			}
 		 }
 		var e = Date.now();
 		console.log( "CTM data parse time [inline]: " + (e-s) + " ms" );
 	 }
+
+  return result;
 } 
 
-THREE.CTMParser.prototype.createModelBuffers = function ( file, callback ) {
+THREE.CTMParser.prototype.createModelBuffers = function ( file ) {
   console.log("creating model buffers")
 	var Model = function ( ) {
 
@@ -405,11 +407,11 @@ THREE.CTMParser.prototype.createModelBuffers = function ( file, callback ) {
 
 	}
 
-	callback( geometry );
-
+	//callback( geometry );
+  return geometry;
 };
 
-THREE.CTMParser.prototype.createModelClassic = function ( file, callback ) {
+THREE.CTMParser.prototype.createModelClassic = function ( file ) {
 
 	var Model = function ( ) {
 
@@ -620,8 +622,8 @@ THREE.CTMParser.prototype.createModelClassic = function ( file, callback ) {
 
 	Model.prototype = Object.create( THREE.Geometry.prototype );
 
-	callback( new Model() );
-
+	//callback( new Model() );
+  return new Model();
 };
 
 if (detectEnv.isModule) module.exports = THREE.CTMParser;
