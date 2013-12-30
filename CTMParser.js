@@ -101,7 +101,7 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 
   var parameters = parameters || {};
 	var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
-	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : true;
+	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : false;
 
 	var length = 0;
   //var binaryData = new Uint8Array(data);
@@ -111,7 +111,8 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 //TODO: this is only temporary for 
   var binaryData = toArrayBuffer(data)
   binaryData = new Uint8Array(binaryData);
-  
+  var result = null;  
+
   var s = Date.now();
 
 	if ( parameters.useWorker ) {
