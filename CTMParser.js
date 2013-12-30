@@ -7,12 +7,14 @@
  *
  * @author alteredq / http://alteredqualia.com/
  */
+if(typeof require !== 'undefined')
+{
+  var detectEnv = require("composite-detect");
 
-var detectEnv = require("composite-detect");
-
-if (detectEnv.isModule) var CTM = require("./ctm");
-
- module.exports = THREE.CTMParser;
+  if (detectEnv.isModule) var CTM = require("./ctm");
+  
+  console.log( "pouet" )
+}
 
 THREE.CTMParser = function ( showStatus ) {
 
@@ -108,9 +110,11 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
   //var binaryData = new Uint8Array( new ArrayBuffer(data) );
   //var binaryData = new Buffer( new Uint8Array(data) );
   
-//TODO: this is only temporary for 
-  var binaryData = toArrayBuffer(data)
-  binaryData = new Uint8Array(binaryData);
+//TODO: this is only temporary for NODE.js side
+  //var data = toArrayBuffer(data);
+
+
+  binaryData = new Uint8Array(data);
   var result = null;  
 
   var s = Date.now();
@@ -627,4 +631,8 @@ THREE.CTMParser.prototype.createModelClassic = function ( file ) {
   return new Model();
 };
 
-if (detectEnv.isModule) module.exports = THREE.CTMParser;
+if(typeof require !== 'undefined')
+{
+  if (detectEnv.isModule) module.exports = THREE.CTMParser;
+}
+
