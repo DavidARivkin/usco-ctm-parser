@@ -16,9 +16,9 @@
     function onDataRecieved( event )
     {
        var data = oReq.response;
-       console.log("bla",data,{useBuffers:true,useWorker:true});
-       parser.parse( data );
-        
+       //console.log("bla",data);
+       var result = parser.parse( data, {useBuffers:true,useWorker:true} ); //,useWorker:true} );
+       
     }
 
     function fetchData(uri)

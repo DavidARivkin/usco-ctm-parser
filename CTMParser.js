@@ -10,10 +10,7 @@
 if(typeof require !== 'undefined')
 {
   var detectEnv = require("composite-detect");
-
   if (detectEnv.isModule) var CTM = require("./ctm");
-  
-  console.log( "pouet" )
 }
 
 THREE.CTMParser = function ( showStatus ) {
@@ -98,6 +95,28 @@ function toArrayBuffer(buffer) {
     return ab;
 }
 
+function str2ab(str) {
+  var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+  var bufView = new Uint16Array(buf);
+  for (var i=0, strLen=str.length; i<strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
+{
+  if (typeof data == 'string' || data instanceof String)
+  {
+    console.log("data is string")
+    return str2ab(data);
+  }
+  else
+  {
+    return data;
+  }
+}
+
 THREE.CTMParser.prototype.parse = function( data, parameters ) {
 	var scope = this;
 
@@ -112,8 +131,8 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
   
 //TODO: this is only temporary for NODE.js side
   //var data = toArrayBuffer(data);
-
-
+  data = this.ensureArrayBuffer( data ); 
+  
   binaryData = new Uint8Array(data);
   var result = null;  
 
@@ -121,7 +140,7 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 
 	if ( parameters.useWorker ) {
 
-		var worker = new Worker( "js/loaders/ctm/CTMWorker.js" );
+		var worker = new Worker( "../CTMWorker.js" );
 
 		worker.onmessage = function( event ) {
 			var files = event.data;
@@ -130,9 +149,9 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 				var e1 = Date.now();
 				// console.log( "CTM data parse time [worker]: " + (e1-s) + " ms" );
 				if ( useBuffers ) {
-					scope.createModelBuffers( ctmFile, callback );
+					scope.createModelBuffers( ctmFile );
 				} else {
-					scope.createModelClassic( ctmFile, callback );
+					scope.createModelClassic( ctmFile );
 				}
 				var e = Date.now();
 				console.log( "model load time [worker]: " + (e-e1) + " ms, total: " + (e-s));
