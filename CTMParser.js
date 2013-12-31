@@ -13,14 +13,15 @@ if(typeof require !== 'undefined')
   if (detectEnv.isModule) var CTM = require("./ctm");
 }
 
+var isBrowser = typeof window !== 'undefined';
+
 THREE.CTMParser = function ( showStatus ) {
 
   this.outputs = ["geometry"]; //to be able to auto determine data type(s) fetched by parser
+  this.inputDataType = "arrayBuffer"
 	THREE.Loader.call( this, showStatus );
 
 };
-
-THREE.CTMParser.prototype = Object.create( THREE.Loader.prototype );
 
 // Load multiple CTM parts defined in JSON
 
@@ -104,12 +105,22 @@ function str2ab(str) {
   return buf;
 }
 
+function str2ab2(str)
+{
+   var idx, len = str.length, arr = new Array( len );
+    for ( idx = 0 ; idx < len ; ++idx ) {
+        arr[ idx ] = str.charCodeAt(idx) & 0xFF;
+    }
+    // You may create an ArrayBuffer from a standard array (of values) as follows:
+    return new Uint8Array( arr ).buffer;
+}
+
 THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
 {
   if (typeof data == 'string' || data instanceof String)
   {
     console.log("data is string")
-    return str2ab(data);
+    return str2ab2(data);
   }
   else
   {
@@ -123,6 +134,8 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
   var parameters = parameters || {};
 	var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
 	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : false;
+
+  //parameters.useWorker = isBrowser;
 
 	var length = 0;
   //var binaryData = new Uint8Array(data);
@@ -139,7 +152,7 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
   var s = Date.now();
 
 	if ( parameters.useWorker ) {
-
+    console.log("using worker")
 		var worker = new Worker( "../CTMWorker.js" );
 
 		worker.onmessage = function( event ) {
