@@ -23,70 +23,6 @@ THREE.CTMParser = function ( showStatus ) {
 
 };
 
-// Load multiple CTM parts defined in JSON
-
-THREE.CTMParser.prototype.loadParts = function( url, callback, parameters ) {
-
-	var scope = this;
-
-	var xhr = new XMLHttpRequest();
-
-	var basePath = parameters.basePath ? parameters.basePath : this.extractUrlBase( url );
-
-	xhr.onreadystatechange = function() {
-
-		if ( xhr.readyState === 4 ) {
-
-			if ( xhr.status === 200 || xhr.status === 0 ) {
-
-				var jsonObject = JSON.parse( xhr.responseText );
-
-				var materials = [], geometries = [], counter = 0;
-
-				function callbackFinal( geometry ) {
-
-					counter += 1;
-
-					geometries.push( geometry );
-
-					if ( counter === jsonObject.offsets.length ) {
-
-						callback( geometries, materials );
-
-					}
-
-				}
-
-
-				// init materials
-
-				for ( var i = 0; i < jsonObject.materials.length; i ++ ) {
-
-					materials[ i ] = THREE.Loader.prototype.createMaterial( jsonObject.materials[ i ], basePath );
-
-				}
-
-				// load joined CTM file
-
-				var partUrl = basePath + jsonObject.data;
-				var parametersPart = { useWorker: parameters.useWorker, useBuffers: parameters.useBuffers, offsets: jsonObject.offsets };
-				scope.load( partUrl, callbackFinal, parametersPart );
-
-			}
-
-		}
-
-	}
-
-	xhr.open( "GET", url, true );
-	xhr.setRequestHeader( "Content-Type", "text/plain" );
-	xhr.send( null );
-
-};
-
-// Load CTMParser compressed models
-//  - parameters
-
 function toArrayBuffer(buffer) {
     var ab = new ArrayBuffer(buffer.length);
     var view = new Uint8Array(ab);
@@ -128,6 +64,9 @@ THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
   }
 }
 
+
+// Load CTM compressed models
+//  - parameters
 THREE.CTMParser.prototype.parse = function( data, parameters ) {
 	var scope = this;
 
@@ -153,7 +92,7 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 
 	if ( parameters.useWorker ) {
     console.log("using worker")
-		var worker = new Worker( "../CTMWorker.js" );
+		var worker = new Worker( "./CTMWorker.js" );
 
 		worker.onmessage = function( event ) {
 			var files = event.data;

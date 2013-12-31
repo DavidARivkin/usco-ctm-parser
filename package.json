@@ -11,7 +11,8 @@
   "devDependencies": {
     "jasmine-node": "",
     "three": "~0.58.10",
-    "composite-detect": "0.0.3"
+    "composite-detect": "0.0.3",
+    "workerify": "~0.2.3"
   },
   "scripts": {
     "test": "jasmine-node specs/"

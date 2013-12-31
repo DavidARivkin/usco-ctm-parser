@@ -1,4 +1,6 @@
-importScripts( "lzma.js", "ctm.js" );
+//importScripts( "../ctm.js","lzma.js" );
+var CTM = require("./ctm");
+var lzma = require("./lzma");
 
 self.onmessage = function( event ) {
 

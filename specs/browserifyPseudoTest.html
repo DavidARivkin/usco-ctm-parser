@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <title>UltiViewer example</title>
+       <script type="text/javascript" src="three.min.js"></script>
+      <script src="../lib/CTMParser.js"></script>
+  </head>
+<body>
+
+  <script>
+
+    var parser = new THREE.CTMParser();
+    var oReq = new XMLHttpRequest();
+
+    function onDataRecieved( event )
+    {
+       var data = oReq.response;
+       //console.log("bla",data);
+       var result = parser.parse( data, {useBuffers:true,useWorker:true} ); //,useWorker:true} );
+       
+    }
+
+    function fetchData(uri)
+    {
+      oReq.responseType = "arraybuffer";
+      oReq.onload = onDataRecieved;
+      oReq.open("GET", uri, true);
+      oReq.send( null );
+    }
+    fetchData("data/hand.ctm")
+
+  </script>  
+</body>
+</html>
