@@ -11,6 +11,7 @@ if(typeof require !== 'undefined')
 {
   var detectEnv = require("composite-detect");
   if (detectEnv.isModule) var CTM = require("./ctm");
+  var Q = require('q');
 }
 
 var isBrowser = typeof window !== 'undefined';
@@ -55,7 +56,6 @@ THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
 {
   if (typeof data == 'string' || data instanceof String)
   {
-    console.log("data is string")
     return str2ab2(data);
   }
   else
@@ -63,7 +63,6 @@ THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
     return data;
   }
 }
-
 
 // Load CTM compressed models
 //  - parameters
@@ -74,7 +73,8 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 	var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
 	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : false;
 
-  //parameters.useWorker = isBrowser;
+  parameters.useWorker = isBrowser;
+  deferred = Q.defer();
 
 	var length = 0;
   //var binaryData = new Uint8Array(data);
@@ -91,7 +91,6 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
   var s = Date.now();
 
 	if ( parameters.useWorker ) {
-    console.log("using worker")
 		var worker = new Worker( "./CTMWorker.js" );
 
 		worker.onmessage = function( event ) {
@@ -101,9 +100,11 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 				var e1 = Date.now();
 				// console.log( "CTM data parse time [worker]: " + (e1-s) + " ms" );
 				if ( useBuffers ) {
-					scope.createModelBuffers( ctmFile );
+					var geometry = scope.createModelBuffers( ctmFile );
+          deferred.resolve( geometry );
 				} else {
-					scope.createModelClassic( ctmFile );
+					var geometry = scope.createModelClassic( ctmFile );
+          deferred.resolve( geometry );
 				}
 				var e = Date.now();
 				console.log( "model load time [worker]: " + (e-e1) + " ms, total: " + (e-s));
@@ -120,16 +121,19 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
 			var ctmFile = new CTM.File( stream );
 
 			if ( useBuffers ) {
-				result = scope.createModelBuffers( ctmFile );
+				var geometry = scope.createModelBuffers( ctmFile );
+        deferred.resolve( geometry );
 			} else {
-				result = scope.createModelClassic( ctmFile );
+				var geometry = scope.createModelClassic( ctmFile );
+        deferred.resolve( geometry );
 			}
 		 }
 		var e = Date.now();
 		console.log( "CTM data parse time [inline]: " + (e-s) + " ms" );
 	 }
 
-  return result;
+  //return result;
+  return deferred.promise;
 } 
 
 THREE.CTMParser.prototype.createModelBuffers = function ( file ) {
