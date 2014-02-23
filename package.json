@@ -6,14 +6,14 @@
     "type": "git",
     "url": "http://github.com/usco/usco-ctm-parser.git"
   },
-  "main": "CTMParser.js",
+  "main": "ctm-parser.js",
   "dependencies": {
-    "q": "~0.9.7"
+    "q": "~0.9.7",
+    "three-js": "git://github.com/usco/three.js.git",
+    "composite-detect": "0.0.3"
   },
   "devDependencies": {
     "jasmine-node": "",
-    "three": "~0.58.10",
-    "composite-detect": "0.0.3",
     "workerify": "~0.2.3"
   },
   "scripts": {

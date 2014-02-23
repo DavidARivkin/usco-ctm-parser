@@ -1,5 +1,5 @@
 THREE = require("three");
-CTMParser = require("../CTMParser");
+CTMParser = require("../ctm-parser");
 fs = require("fs");
 
 describe("CTM parser tests", function() {

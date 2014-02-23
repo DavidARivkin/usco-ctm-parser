@@ -12,11 +12,12 @@ if(typeof require !== 'undefined')
   var detectEnv = require("composite-detect");
   if (detectEnv.isModule) var CTM = require("./ctm");
   var Q = require('q');
+  if(detectEnv.isModule) var THREE = require("three");
 }
 
 var isBrowser = typeof window !== 'undefined';
 
-THREE.CTMParser = function ( showStatus ) {
+CTMParser = function ( showStatus ) {
 
   this.outputs = ["geometry"]; //to be able to auto determine data type(s) fetched by parser
   this.inputDataType = "arrayBuffer"
@@ -52,7 +53,7 @@ function str2ab2(str)
     return new Uint8Array( arr ).buffer;
 }
 
-THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
+CTMParser.prototype.ensureArrayBuffer = function( data )
 {
   if (typeof data == 'string' || data instanceof String)
   {
@@ -66,7 +67,7 @@ THREE.CTMParser.prototype.ensureArrayBuffer = function( data )
 
 // Load CTM compressed models
 //  - parameters
-THREE.CTMParser.prototype.parse = function( data, parameters ) {
+CTMParser.prototype.parse = function( data, parameters ) {
 	var scope = this;
 
   var parameters = parameters || {};
@@ -136,7 +137,7 @@ THREE.CTMParser.prototype.parse = function( data, parameters ) {
   return deferred.promise;
 } 
 
-THREE.CTMParser.prototype.createModelBuffers = function ( file ) {
+CTMParser.prototype.createModelBuffers = function ( file ) {
   console.log("creating model buffers")
 	var Model = function ( ) {
 
@@ -391,7 +392,7 @@ THREE.CTMParser.prototype.createModelBuffers = function ( file ) {
   return geometry;
 };
 
-THREE.CTMParser.prototype.createModelClassic = function ( file ) {
+CTMParser.prototype.createModelClassic = function ( file ) {
 
 	var Model = function ( ) {
 
@@ -608,6 +609,6 @@ THREE.CTMParser.prototype.createModelClassic = function ( file ) {
 
 if(typeof require !== 'undefined')
 {
-  if (detectEnv.isModule) module.exports = THREE.CTMParser;
+  if (detectEnv.isModule) module.exports = CTMParser;
 }
 
