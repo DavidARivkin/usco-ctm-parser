@@ -7,15 +7,12 @@
  *
  * @author alteredq / http://alteredqualia.com/
  */
-if(typeof require !== 'undefined')
-{
-  var detectEnv = require("composite-detect");
-  if (detectEnv.isModule) var CTM = require("./ctm");
-  var Q = require('q');
-  if(detectEnv.isModule) var THREE = require("three");
-}
+var detectEnv = require("composite-detect");
 
-var isBrowser = typeof window !== 'undefined';
+if(detectEnv.isNode)    var THREE = require("three");
+if(detectEnv.isBrowser) var THREE = window.THREE;
+if (detectEnv.isModule) var CTM = require("./ctm");
+if (detectEnv.isModule) var Q = require('q');
 
 CTMParser = function ( showStatus ) {
 
@@ -74,8 +71,8 @@ CTMParser.prototype.parse = function( data, parameters ) {
 	var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
 	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : false;
 
-  parameters.useWorker = isBrowser;
-  deferred = Q.defer();
+  parameters.useWorker = detectEnv.isBrowser;
+  var deferred = Q.defer();
 
 	var length = 0;
   //var binaryData = new Uint8Array(data);
@@ -607,8 +604,4 @@ CTMParser.prototype.createModelClassic = function ( file ) {
   return new Model();
 };
 
-if(typeof require !== 'undefined')
-{
-  if (detectEnv.isModule) module.exports = CTMParser;
-}
-
+if (detectEnv.isModule) module.exports = CTMParser;
