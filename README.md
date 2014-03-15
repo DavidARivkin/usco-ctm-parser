@@ -14,12 +14,6 @@ How to generate browser/polymer.js version (with require support):
 ------------------------------------------------------------------
 Type: 
 
-    browserify ctm-parser.js -r ./ctm-parser.js:ctm-parser -o lib/ctm-parser.js -x composite-detect -x three -x q -t workerify
+      grunt build-browser-lib
 
-then replace (manually for now) all following entries in the generated file:
-
-  "composite-detect":"awZPbp","three":"Wor+Zu"
-
-with the correct module names, ie:
-
-   "composite-detect":"composite-detect","three":"three"
+This will generate the correct browser(ified) version of the source in the lib folder
