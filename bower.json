@@ -5,6 +5,10 @@
   "dependencies": {
   },
   "ignore": [
-    "specs/"
+    "specs/",
+    "./ctm-parser.js",
+    "./ctm.js",
+    "./CTMWorker.js",
+    "./lzma.js"
   ]
 }
