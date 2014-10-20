@@ -68,10 +68,11 @@ CTMParser.prototype.parse = function( data, parameters ) {
 	var scope = this;
 
   var parameters = parameters || {};
-	var offsets = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
+	var offsets    = parameters.offsets !== undefined ? parameters.offsets : [ 0 ];
 	var useBuffers = parameters.useBuffers !== undefined ? parameters.useBuffers : false;
-
-  parameters.useWorker = detectEnv.isBrowser;
+  var useWorker  = parameters.useWorker !== undefined ?  parameters.useWorker && detectEnv.isBrowser: true;
+  var rawBuffers = parameters.rawBuffers !== undefined ? parameters.rawBuffers : false;
+  
   var deferred = Q.defer();
 
 	var length = 0;
@@ -88,7 +89,7 @@ CTMParser.prototype.parse = function( data, parameters ) {
 
   var s = Date.now();
 
-	if ( parameters.useWorker ) {
+	if ( useWorker ) {
 		var worker = new Worker( "./CTMWorker.js" );
 
 		worker.onmessage = function( event ) {
@@ -99,9 +100,11 @@ CTMParser.prototype.parse = function( data, parameters ) {
 				// console.log( "CTM data parse time [worker]: " + (e1-s) + " ms" );
 				if ( useBuffers ) {
 					var geometry = scope.createModelBuffers( ctmFile );
+					deferred.notify( {"parsing":100,"total":Math.NaN} )
           deferred.resolve( geometry );
 				} else {
 					var geometry = scope.createModelClassic( ctmFile );
+					deferred.notify( {"parsing":100,"total":Math.NaN} )
           deferred.resolve( geometry );
 				}
 				var e = Date.now();
@@ -109,6 +112,9 @@ CTMParser.prototype.parse = function( data, parameters ) {
 			}
 		};
 	  worker.postMessage( { "data": binaryData, "offsets": offsets } );
+	  Q.catch( deferred.promise, function(){
+		  worker.terminate()
+		});
 	} else {
 		for ( var i = 0; i < offsets.length; i ++ ) {
 			var stream = new CTM.Stream( binaryData );
@@ -120,9 +126,11 @@ CTMParser.prototype.parse = function( data, parameters ) {
 
 			if ( useBuffers ) {
 				var geometry = scope.createModelBuffers( ctmFile );
+				deferred.notify( {"parsing":100,"total":Math.NaN} )
         deferred.resolve( geometry );
 			} else {
 				var geometry = scope.createModelClassic( ctmFile );
+				deferred.notify( {"parsing":100,"total":Math.NaN} )
         deferred.resolve( geometry );
 			}
 		 }
@@ -131,7 +139,7 @@ CTMParser.prototype.parse = function( data, parameters ) {
 	 }
 
   //return result;
-  return deferred.promise;
+  return deferred;
 } 
 
 CTMParser.prototype.createModelBuffers = function ( file ) {
@@ -384,8 +392,11 @@ CTMParser.prototype.createModelBuffers = function ( file ) {
 		geometry.computeVertexNormals();
 
 	}
+  geometry.computeVertexNormals();
+  geometry.computeFaceNormals();
+  geometry.computeBoundingBox();
+	geometry.computeBoundingSphere();
 
-	//callback( geometry );
   return geometry;
 };
 
@@ -420,8 +431,6 @@ CTMParser.prototype.createModelClassic = function ( file ) {
 
 		init_faces( file.body.indices );
 
-		this.computeCentroids();
-		this.computeFaceNormals();
 		//this.computeTangents();
 
 		function init_vertices( buffer ) {
