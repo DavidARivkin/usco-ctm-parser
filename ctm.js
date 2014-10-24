@@ -48,8 +48,18 @@ CTM.File = function(stream){
   this.load(stream);
 };
 
+CTM.File.prototype.load = function(stream){
+  this.header = new CTM.FileHeader(stream);
+  this.body = new CTM.FileBody(this.header);
+  
+  this.getReader().read(stream, this.body);
+/*  var reader = this.getReader();
+  reader.read(stream, this.body);*/
+};
+
 CTM.File.prototype.getReader = function(){
   var reader;
+
   switch(this.header.compressionMethod){
     case CTM.CompressionMethod.RAW:
       reader = new CTM.ReaderRAW();
@@ -63,14 +73,6 @@ CTM.File.prototype.getReader = function(){
   }
 
   return reader;
-};
-
-CTM.File.prototype.load = function(stream){
-  this.header = new CTM.FileHeader(stream);
-  this.body = new CTM.FileBody(this.header);
-  
-  var reader = this.getReader();
-  reader.read(stream, this.body);
 };
 
 CTM.FileHeader = function(stream){
@@ -635,7 +637,7 @@ CTM.Stream.prototype.readString = function(){
 
   this.offset += len;
 
-  return this.data.subarray(this.offset - len, len);
+  return String.fromCharCode.apply(null,this.data.subarray(this.offset - len, this.offset));
 };
 
 CTM.Stream.prototype.readArrayInt32 = function(array){
@@ -658,6 +660,12 @@ CTM.Stream.prototype.readArrayFloat32 = function(array){
   return array;
 };
 
+// browserify support
+if ( typeof module === 'object' ) {
+
+	module.exports = CTM;
+
+}
 
 if(typeof require !== 'undefined') if (detectEnv.isModule) module.exports = CTM;
 

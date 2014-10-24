@@ -89,6 +89,7 @@ CTMParser.prototype.parse = function( data, parameters ) {
 
   var s = Date.now();
 
+  //useBuffers = false;
 	if ( useWorker ) {
 		var worker = new Worker( "./CTMWorker.js" );
 
@@ -144,238 +145,53 @@ CTMParser.prototype.parse = function( data, parameters ) {
 
 CTMParser.prototype.createModelBuffers = function ( file ) {
   console.log("creating model buffers")
-	var Model = function ( ) {
 
-		var scope = this;
-
-		var reorderVertices = true;
-
-		scope.materials = [];
+var Model = function () {
 
 		THREE.BufferGeometry.call( this );
 
-		var s = Date.now();
-		// init GL buffers
+		this.materials = [];
 
-		var vertexIndexArray = file.body.indices,
-		vertexPositionArray = file.body.vertices,
-		vertexNormalArray = file.body.normals;
+		var indices = file.body.indices,
+		positions = file.body.vertices,
+		normals = file.body.normals;
 
-		var vertexUvArray, vertexColorArray;
+		var uvs, colors;
 
-		if ( file.body.uvMaps !== undefined && file.body.uvMaps.length > 0 ) {
-			vertexUvArray = file.body.uvMaps[ 0 ].uv;
-		}
+		var uvMaps = file.body.uvMaps;
 
-		if ( file.body.attrMaps !== undefined && file.body.attrMaps.length > 0 && file.body.attrMaps[ 0 ].name === "Color" ) {
-			vertexColorArray = file.body.attrMaps[ 0 ].attr;
-		}
+		if ( uvMaps !== undefined && uvMaps.length > 0 ) {
 
-		// reorder vertices
-		// (needed for buffer splitting, to keep together face vertices)
-		if ( reorderVertices ) {
-
-		    	function copyVertexInfo(v, vt) {
-
-				var sx = v * 3,
-			    	    sy = v * 3 + 1,
-			    	    sz = v * 3 + 2,
-
-			    	dx = vt * 3,
-			    	dy = vt * 3 + 1,
-			    	dz = vt * 3 + 2;
-
-				newVertices[ dx ] = vertexPositionArray[ sx ];
-				newVertices[ dy ] = vertexPositionArray[ sy ];
-				newVertices[ dz ] = vertexPositionArray[ sz ];
-
-				if ( vertexNormalArray ) {
-				    newNormals[ dx ] = vertexNormalArray[ sx ];
-				    newNormals[ dy ] = vertexNormalArray[ sy ];
-				    newNormals[ dz ] = vertexNormalArray[ sz ];
-				}
-
-				if ( vertexUvArray ) {
-				    newUvs[ vt * 2 ] 	 = vertexUvArray[ v * 2 ];
-				    newUvs[ vt * 2 + 1 ] = vertexUvArray[ v * 2 + 1 ];
-				}
-
-				if ( vertexColorArray ) {
-				    newColors[ vt * 4 ] 	= vertexColorArray[ v * 4 ];
-				    newColors[ vt * 4 + 1 ] = vertexColorArray[ v * 4 + 1 ];
-				    newColors[ vt * 4 + 2 ] = vertexColorArray[ v * 4 + 2 ];
-				    newColors[ vt * 4 + 3 ] = vertexColorArray[ v * 4 + 3 ];
-				}
-		    	}
-
-		    	function handleVertex( v, iMap ) {
-
-				if ( iMap[ v ] === undefined ) {
-
-					iMap[ v ] = vertexCounter;
-                    			reverseIndexMap[vertexCounter] = v;
-					vertexCounter += 1;
-				}
-                		return iMap[ v ];
-		    	}
-
-			var newFaces = new Uint32Array( vertexIndexArray.length );
-			var indexMap = {}, reverseIndexMap = {}, vertexCounter = 0;
-
-            		var spawledFaceCount = 0,
-                	    spawledFaceLimit = Math.ceil(vertexIndexArray.length/3000);
-            		var sprawledFaces = new Uint32Array( spawledFaceLimit );  // to store sprawled triangle indices
-
-			for ( var i = 0; i < vertexIndexArray.length; i += 3 ) {
-
-				var a = vertexIndexArray[ i ];
-				var b = vertexIndexArray[ i + 1 ];
-				var c = vertexIndexArray[ i + 2 ];
-
-				handleVertex( a, indexMap );
-				handleVertex( b, indexMap );
-				handleVertex( c, indexMap );
-
-				// check for sprawled triangles and put them aside to recreate later
-				if ( Math.abs( indexMap[a] - indexMap[b] ) > 65535 ||
-                     		     Math.abs( indexMap[b] - indexMap[c] ) > 65535 ||
-                     		     Math.abs( indexMap[c] - indexMap[a] ) > 65535 ){
-
-			    		// expand storage when neccessary
-			    		if (spawledFaceCount >= spawledFaceLimit) {
-						console.warn("reached sprawled faces limit: " + spawledFaceCount);
-						spawledFaceLimit *= 2;
-						var tArr = new Uint32Array( spawledFaceLimit );
-						tArr.set(sprawledFaces);
-						sprawledFaces = tArr;
-			    		}
-
-                    			sprawledFaces[ spawledFaceCount ] = i;  // starting index in newFaces
-                    			spawledFaceCount += 1;
-                		}
-                		else {
-
-				    newFaces[ i ] 	  = indexMap[ a ];
-				    newFaces[ i + 1 ] = indexMap[ b ];
-				    newFaces[ i + 2 ] = indexMap[ c ];
-                		}
-			}
-            		// console.log("Number of sprawled faces: " + spawledFaceCount + " current limit: " + spawledFaceLimit +
-                        //	" total: " + vertexIndexArray.length/3 + " vertices: " + vertexCounter);
-
-			// create dublicate vertices and update sprawled faces
-			var indexMap2 = {},
-			    noov = vertexCounter;   // # of original vertices
-
-			for (var isf = 0; isf < spawledFaceCount; isf++ ) {
-				var i = sprawledFaces[isf];
-
-				for (var j = 0; j < 3; j++) {
-				    var v = vertexIndexArray[ i + j ];
-				    newFaces[ i + j] = handleVertex(v, indexMap2);   // new vertex
-				}
-			}
-
-			// console.log("Created duplicated vertices: " + (vertexCounter - noov));
-
-			// copy xyz, uv, normals and colors into new arrays
-			var newVertices = new Float32Array( 3*vertexCounter );
-			var newNormals, newUvs, newColors;
-
-			if ( vertexNormalArray ) newNormals = new Float32Array( 3*vertexCounter );
-			if ( vertexUvArray ) newUvs = new Float32Array( 2*vertexCounter );
-			if ( vertexColorArray ) newColors = new Float32Array( 4*vertexCounter );
-
-			for (var iv = 0; iv < vertexCounter; iv++) {
-				copyVertexInfo(reverseIndexMap[iv], iv);
-			}
-
-			vertexIndexArray = newFaces;
-			vertexPositionArray = newVertices;
-
-			if ( vertexNormalArray ) vertexNormalArray = newNormals;
-			if ( vertexUvArray ) vertexUvArray = newUvs;
-			if ( vertexColorArray ) vertexColorArray = newColors;
-		}
-
-		// compute offsets
-
-		scope.offsets = [];
-
-		var indices = vertexIndexArray;
-
-		var start = 0,
-			min = vertexPositionArray.length,
-			max = 0,
-			minPrev = min;
-
-		for ( var i = 0; i < indices.length; ) {
-
-			for ( var j = 0; j < 3; ++ j ) {
-
-				var idx = indices[ i ++ ];
-
-				if ( idx < min ) min = idx;
-				if ( idx > max ) max = idx;
-
-			}
-
-			if ( max - min > 65535 ) {
-
-				i -= 3;
-
-                		if ( minPrev > 0 ) {
-
-				    for ( var k = start; k < i; ++ k )
-					    indices[ k ] -= minPrev;
-				}
-
-				scope.offsets.push( { start: start, count: i - start, index: minPrev } );
-
-				start = i;
-				min = vertexPositionArray.length;
-				max = 0;
-
-			}
-
-			minPrev = min;
+			uvs = uvMaps[ 0 ].uv;
 
 		}
 
-        	if ( minPrev > 0 ) {
+		var attrMaps = file.body.attrMaps;
 
-		    for ( var k = start; k < i; ++ k )
-			    indices[ k ] -= minPrev;
-		}
-		scope.offsets.push( { start: start, count: i - start, index: minPrev } );
+		if ( attrMaps !== undefined && attrMaps.length > 0 && attrMaps[ 0 ].name === 'Color' ) {
 
-        	// var e = Date.now();
-		// console.log( "Vetex reordering time: " + (e-s) + " ms" );
-
-		// recast CTM 32-bit indices as 16-bit WebGL indices
-		var vertexIndexArray16 = new Uint16Array( vertexIndexArray );
-
-		// attributes
-		var attributes = scope.attributes;
-
-		attributes[ "index" ]    = { itemSize: 1, array: vertexIndexArray16, numItems: vertexIndexArray16.length };
-		attributes[ "position" ] = { itemSize: 3, array: vertexPositionArray, numItems: vertexPositionArray.length };
-
-		if ( vertexNormalArray !== undefined ) {
-
-			attributes[ "normal" ] = { itemSize: 3, array: vertexNormalArray, numItems: vertexNormalArray.length };
+			colors = attrMaps[ 0 ].attr;
 
 		}
 
-		if ( vertexUvArray !== undefined ) {
+		this.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
+		this.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 
-			attributes[ "uv" ] = { itemSize: 2, array: vertexUvArray, numItems: vertexUvArray.length };
+		if ( normals !== undefined ) {
+
+			this.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
 
 		}
 
-		if ( vertexColorArray !== undefined ) {
+		if ( uvs !== undefined ) {
 
-			attributes[ "color" ]  = { itemSize: 4, array: vertexColorArray, numItems: vertexColorArray.length };
+			this.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+
+		}
+
+		if ( colors !== undefined ) {
+
+			this.addAttribute( 'color', new THREE.BufferAttribute( colors, 4 ) );
 
 		}
 
@@ -385,17 +201,13 @@ CTMParser.prototype.createModelBuffers = function ( file ) {
 
 	var geometry = new Model();
 
+	geometry.computeOffsets();
+
 	// compute vertex normals if not present in the CTM model
-
-	if ( geometry.attributes[ "normal" ] === undefined ) {
-
+	if ( geometry.attributes.normal === undefined ) {
 		geometry.computeVertexNormals();
-
 	}
-  geometry.computeVertexNormals();
-  geometry.computeFaceNormals();
-  geometry.computeBoundingBox();
-	geometry.computeBoundingSphere();
+
 
   return geometry;
 };
