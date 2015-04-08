@@ -17,3 +17,10 @@ Type:
       grunt build-browser-lib
 
 This will generate the correct browser(ified) version of the source in the lib folder
+
+
+
+Usage with webpack
+------------------
+
+  just require / import the library (correctly points to ctm-parser.js)

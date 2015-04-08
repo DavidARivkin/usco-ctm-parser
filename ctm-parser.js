@@ -6,19 +6,19 @@
  *	http://code.google.com/p/js-openctm/
  *
  * @author alteredq / http://alteredqualia.com/
+ * heavilly modified by kaosat-dev
  */
 var detectEnv = require("composite-detect");
 
-if(detectEnv.isNode)    var THREE = require("three");
 if(detectEnv.isBrowser) var THREE = window.THREE;
-if (detectEnv.isModule) var CTM = require("./ctm");
-if (detectEnv.isModule) var Q = require('q');
+if(detectEnv.isModule && !THREE) var THREE = require("three");
+if(detectEnv.isModule) var CTM = require("./ctm");
+if(detectEnv.isModule) var Q = require('q');
 
-CTMParser = function ( showStatus ) {
+var CTMParser = function ( showStatus ) {
 
   this.outputs = ["geometry"]; //to be able to auto determine data type(s) fetched by parser
   this.inputDataType = "arrayBuffer"
-	THREE.Loader.call( this, showStatus );
 
 };
 
@@ -84,14 +84,16 @@ CTMParser.prototype.parse = function( data, parameters ) {
   //var data = toArrayBuffer(data);
   data = this.ensureArrayBuffer( data ); 
   
-  binaryData = new Uint8Array(data);
+  var binaryData = new Uint8Array(data);
   var result = null;  
 
   var s = Date.now();
 
   //useBuffers = false;
 	if ( useWorker ) {
-		var worker = new Worker( "./CTMWorker.js" );
+    var Worker = require("./ctm-worker.js");//Webpack worker!
+    var worker = new Worker;
+		//browserify var worker = new Worker( "./CTMWorker.js" );
 
 		worker.onmessage = function( event ) {
 			var files = event.data;
@@ -109,7 +111,7 @@ CTMParser.prototype.parse = function( data, parameters ) {
           deferred.resolve( geometry );
 				}
 				var e = Date.now();
-				console.log( "model load time [worker]: " + (e-e1) + " ms, total: " + (e-s));
+				//console.log( "model load time [worker]: " + (e-e1) + " ms, total: " + (e-s));
 			}
 		};
 	  worker.postMessage( { "data": binaryData, "offsets": offsets } );
@@ -136,10 +138,8 @@ CTMParser.prototype.parse = function( data, parameters ) {
 			}
 		 }
 		var e = Date.now();
-		console.log( "CTM data parse time [inline]: " + (e-s) + " ms" );
+		//console.log( "CTM data parse time [inline]: " + (e-s) + " ms" );
 	 }
-
-  //return result;
   return deferred;
 } 
 
