@@ -1,8 +1,3 @@
-if(typeof require !== 'undefined')
-{
-  var detectEnv = require("composite-detect");
-}
-
 var LZMA = LZMA || {};
 
 LZMA.OutWindow = function(){
@@ -513,5 +508,5 @@ LZMA.decompress = function(properties, inStream, outStream, outSize){
   return true;
 };
 
-if(typeof require !== 'undefined') if (detectEnv.isModule) module.exports = LZMA;
+export default LZMA
 

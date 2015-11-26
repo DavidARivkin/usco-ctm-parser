@@ -26,11 +26,8 @@ References:
   http://openctm.sourceforge.net/
 */
 
-if(typeof require !== 'undefined')
-{
-  var detectEnv = require("composite-detect");
-  if (detectEnv.isModule) var LZMA = require("./lzma");
-}
+
+import LZMA from './lzma'
 
 var CTM = CTM || {};
 
@@ -660,12 +657,6 @@ CTM.Stream.prototype.readArrayFloat32 = function(array){
   return array;
 };
 
-// browserify support
-if ( typeof module === 'object' ) {
 
-	module.exports = CTM;
-
-}
-
-if(typeof require !== 'undefined') if (detectEnv.isModule) module.exports = CTM;
+export default CTM
 
