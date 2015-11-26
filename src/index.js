@@ -22,8 +22,6 @@ import {createModelBuffers} from './parseHelpers'
 export const outputs = ["geometry"] //to be able to auto determine data type(s) fetched by parser
 export const inputDataType = "arrayBuffer" //to be able to set required input data type 
 
-
-
 // Load CTM compressed models
 export default function parse(data, parameters={}){
 
@@ -51,9 +49,9 @@ export default function parse(data, parameters={}){
 
 	if ( useWorker ) {
     //let Worker = require("./worker.js");//Webpack worker!
-    //var worker = new Worker;
-		//browserify 
-    let worker = new Worker( "./worker.js" )
+    //var worker = new Worker
+		
+    let worker = new Worker( "./worker.js" )//browserify 
 
 		worker.onmessage = function( event ) {
 			let files = event.data
@@ -66,8 +64,10 @@ export default function parse(data, parameters={}){
       
       obs.onNext({progress: 1, total:Math.NaN}) 
       obs.onCompleted()
-
 		}
+    worker.onerror = function( event ){
+      obs.onError(`filename:${event.filename} lineno: ${event.lineno} error: ${event.message}`)
+    }
 
 	  worker.postMessage( { "data": binaryData, "offsets": offsets } )
 	  obs.catch(e=>worker.terminate()) 
@@ -75,15 +75,19 @@ export default function parse(data, parameters={}){
   else 
   {
 		for ( var i = 0; i < offsets.length; i ++ ) {
-			let stream = new CTM.Stream( binaryData )
+      try{
+  			let stream = new CTM.Stream( binaryData )
 
-			stream.offset = offsets[ i ]
-			let ctmFile = new CTM.File( stream )
+  			stream.offset = offsets[ i ]
+  			let ctmFile = new CTM.File( stream )
 
-      let geometry = createModelBuffers( ctmFile )
-      console.log("geometry")
-      //obs.onNext({progress: 1, total:Math.NaN}) 
-      obs.onNext(geometry)
+        let geometry = createModelBuffers( ctmFile )
+        console.log("geometry")
+        //obs.onNext({progress: 1, total:Math.NaN}) 
+        obs.onNext(geometry)
+      }catch(error){
+        obs.onError(error)
+      }
 		}
     
     //obs.onNext({progress: 1, total:Math.NaN}) 

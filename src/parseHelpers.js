@@ -19,50 +19,6 @@ export function createModelBuffers ( file ) {
     colors = attrMaps[ 0 ].attr
   }
 
-  /*let vertices = new Float32Array( faces * 3 * 3 )
-  let normals = new Float32Array( faces * 3 * 3 )
-  
-  vertices.set( posArray )
-  normals.set ( normArray )*/
-
-
-  /*  if ( uvMaps !== undefined && uvMaps.length > 0 ) {
-
-      uvs = uvMaps[ 0 ].uv
-
-    }
-
-    var attrMaps = file.body.attrMaps
-
-    if ( attrMaps !== undefined && attrMaps.length > 0 && attrMaps[ 0 ].name === 'Color' ) {
-
-      colors = attrMaps[ 0 ].attr;
-
-    }
-
-    this.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
-    this.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-
-    if ( normals !== undefined ) {
-
-      this.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
-
-    }
-
-    if ( uvs !== undefined ) {
-
-      this.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
-
-    }
-
-    if ( colors !== undefined ) {
-
-      this.addAttribute( 'color', new THREE.BufferAttribute( colors, 4 ) );
-
-    }
-
-  }*/
-
   /*
     geometry.computeOffsets();
 
