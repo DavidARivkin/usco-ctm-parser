@@ -9,31 +9,31 @@
  * heavilly modified by kaosat-dev
  */
 
-
 import detectEnv from 'composite-detect'
 import assign from 'fast.js/object/assign'
 import Rx from 'rx'
-
-import {parseSteps} from './parseHelpers'
-
-export const outputs = ["geometry"] //to be able to auto determine data type(s) fetched by parser
-export const inputDataType = "arrayBuffer" //to be able to set required input data type 
 
 import CTM from './ctm'
 
 import {ensureArrayBuffer} from './utils'
 import {createModelBuffers} from './parseHelpers'
+//import {parseSteps} from './parseHelpers'
+
+export const outputs = ["geometry"] //to be able to auto determine data type(s) fetched by parser
+export const inputDataType = "arrayBuffer" //to be able to set required input data type 
+
+
 
 // Load CTM compressed models
 export default function parse(data, parameters={}){
 
   const defaults = {
     useWorker: (detectEnv.isBrowser===true)
-    offsets: [0]
+    ,offsets: [0]
   }
   parameters = assign({},defaults,parameters)
 
-  const {useWorker} = parameters
+  const {useWorker, offsets} = parameters
   const obs = new Rx.ReplaySubject(1)
 
   let length = 0
@@ -71,21 +71,24 @@ export default function parse(data, parameters={}){
 
 	  worker.postMessage( { "data": binaryData, "offsets": offsets } )
 	  obs.catch(e=>worker.terminate()) 
-
-	} else {
+	} 
+  else 
+  {
 		for ( var i = 0; i < offsets.length; i ++ ) {
 			let stream = new CTM.Stream( binaryData )
 
 			stream.offset = offsets[ i ]
 			let ctmFile = new CTM.File( stream )
 
-        let geometry = createModelBuffers( ctmFile )
-        //obs.onNext({progress: 1, total:Math.NaN}) 
-        obs.onNext(geometry)
-		 }
-     obs.onNext({progress: 1, total:Math.NaN}) 
-    obs.onCompleted()
-	 }
+      let geometry = createModelBuffers( ctmFile )
+      console.log("geometry")
+      //obs.onNext({progress: 1, total:Math.NaN}) 
+      obs.onNext(geometry)
+		}
+    
+    //obs.onNext({progress: 1, total:Math.NaN}) 
+    //obs.onCompleted()
+	}
   return obs
 } 
 

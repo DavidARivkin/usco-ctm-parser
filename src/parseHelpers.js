@@ -1,27 +1,38 @@
 export function createModelBuffers ( file ) {
   console.log("creating model buffers")
 
-var Model = function () {
+  let indices   = file.body.indices
+  let positions = file.body.vertices
+  let normals   = file.body.normals
+  let uvs       = []
+  let colors    = []
 
-    THREE.BufferGeometry.call( this );
+  //materials = []
 
-    this.materials = [];
+  let uvMaps    = file.body.uvMaps
+  if ( uvMaps !== undefined && uvMaps.length > 0 ) {
+    uvs = uvMaps[ 0 ].uv
+  }
 
-    var indices = file.body.indices,
-    positions = file.body.vertices,
-    normals = file.body.normals;
+  let attrMaps = file.body.attrMaps
+  if ( attrMaps !== undefined && attrMaps.length > 0 && attrMaps[ 0 ].name === 'Color' ) {
+    colors = attrMaps[ 0 ].attr
+  }
 
-    var uvs, colors;
+  /*let vertices = new Float32Array( faces * 3 * 3 )
+  let normals = new Float32Array( faces * 3 * 3 )
+  
+  vertices.set( posArray )
+  normals.set ( normArray )*/
 
-    var uvMaps = file.body.uvMaps;
 
-    if ( uvMaps !== undefined && uvMaps.length > 0 ) {
+  /*  if ( uvMaps !== undefined && uvMaps.length > 0 ) {
 
-      uvs = uvMaps[ 0 ].uv;
+      uvs = uvMaps[ 0 ].uv
 
     }
 
-    var attrMaps = file.body.attrMaps;
+    var attrMaps = file.body.attrMaps
 
     if ( attrMaps !== undefined && attrMaps.length > 0 && attrMaps[ 0 ].name === 'Color' ) {
 
@@ -50,19 +61,15 @@ var Model = function () {
 
     }
 
-  }
+  }*/
 
-  Model.prototype = Object.create( THREE.BufferGeometry.prototype );
-
-  var geometry = new Model();
-
-  geometry.computeOffsets();
+  /*
+    geometry.computeOffsets();
 
   // compute vertex normals if not present in the CTM model
   if ( geometry.attributes.normal === undefined ) {
     geometry.computeVertexNormals();
-  }
+  }*/
 
-
-  return geometry;
-};
+  return {positions, indices, normals, uvs, colors}
+}

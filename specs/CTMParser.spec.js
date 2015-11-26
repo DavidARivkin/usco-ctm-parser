@@ -1,34 +1,31 @@
-THREE = require("three");
-CTMParser = require("../ctm-parser");
-fs = require("fs");
+import assert from 'assert'
+import fs from 'fs'
 
-describe("CTM parser tests", function() {
-  var parser = new CTMParser();
-  console.log("Parser outputs", parser.outputs);
+//these two are needed by the parser
+import Rx from 'rx'
+import assign from 'fast.js/object/assign'
+
+
+import parse,  {outputs} from '../src/index'
+
+describe("CTM parser tests", () => {
   
-  it("can parse ctm files", function(done) {
-    data = fs.readFileSync("specs/data/hand.ctm")
-    parsedCTMPromise = parser.parse(data);
+  it("can parse ctm files", function(done){
+    this.timeout(5000)
+    let data = fs.readFileSync("specs/data/hand.ctm")//single file
 
-    parsedCTMPromise.done(function(parsedCTM){
-      expect(parsedCTM instanceof THREE.Geometry).toBe(true);
-      expect(parsedCTM.vertices.length).toEqual(9284);
-      done();
-    });
-    
-  });
+    let obs = parse(data) //we get an observable back
 
-  it("can parse ctm files (to buffer geometry)", function(done) {
-    data = fs.readFileSync("specs/data/hand.ctm") // ,'binary'
-    parsedCTMPromise = parser.parse(data, {useBuffers:true});
+    obs
+      .filter( data => (!data.hasOwnProperty("progress")) ) //filter out progress information
+      .forEach(function(parsedGeometry){
 
-    parsedCTMPromise.done(function(parsedCTM){
-      expect(parsedCTM instanceof THREE.BufferGeometry).toBe(true);
-      expect(parsedCTM.attributes.index.numItems).toEqual(47565);
-      expect(parsedCTM.attributes.position.numItems).toEqual(23991);
-      expect(parsedCTM.attributes.normal.numItems).toEqual(23991);
-      done();
-    });
-  });
+        assert.equal( parsedGeometry.indices.length, 47565)
+        assert.equal( parsedGeometry.positions.length, 27852)
+        assert.equal( parsedGeometry.normals.length , 27852)//23991
+        
+        done()
+    })
+  })
   
-});
+})
