@@ -6,20 +6,33 @@
     "type": "git",
     "url": "http://github.com/usco/usco-ctm-parser.git"
   },
-  "main": "ctm-parser.js",
+  "main": "src/index.js",
   "dependencies": {
-    "q": "~0.9.7",
-    "three-js": "git://github.com/usco/three.js.git",
     "composite-detect": "0.0.3"
+    ,"rx": "^4.0.7"
   },
   "devDependencies": {
-    "jasmine-node": "",
-    "grunt": "~0.4.2",
-    "grunt-browserify": "~1.2.12",
-    "workerify": "~0.2.3",
-    "grunt-bump": "0.0.13"
+    "assert": "^1.3.0",
+    "mocha": "^2.3.4",
+    "babel-core": "^6.2.1",
+    "babel-preset-es2015": "^6.1.18",
+    "babelify": "^7.2.0",
+    "browserify": "^12.0.1",
+    "browserify-shim": "^3.8.11",
+    "workerify": "^0.3.0"
   },
   "scripts": {
-    "test": "jasmine-node specs/"
+    "browserify": "browserify src/index.js -t babelify -t workerify -t browserify-shim --standalone ctm-parser --exclude rx --outfile lib/ctm-parser.js",
+    "mocha": "mocha specs --compilers js:babel-core/register",
+    "test": "npm run mocha",
+    "build":"npm run browserify"
+  },
+  "browserify-shim": {
+    "rx": "global:Rx"
+  },
+  "browserify": {
+    "transform": [
+      "babelify"
+    ]
   }
 }

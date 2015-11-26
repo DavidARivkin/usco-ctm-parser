@@ -1,26 +1,44 @@
-ctm format parser for USCO project, based on THREE.js CTM parser
+## Usco-ctm-parser
 
-General information
--------------------
-This repository contains both the:
-- node.js version:
-ctm-parser.js at the root of the project
-- polymer.js/browser version which is a combo of
-lib/ctm-parser.js (browserified version of the above)
-ctm-parser.html
+[![GitHub version](https://badge.fury.io/gh/usco%2Fusco-ctm-parser.svg)](https://badge.fury.io/gh/usco%2Fusco-ctm-parser)
 
+ctm format parser for USCO project
 
-How to generate browser/polymer.js version (with require support):
-------------------------------------------------------------------
-Type: 
+originally based on THREE.js CTM parser, but rather extensively modified.
+(not dependenant, or using three.js anymore)
 
-      grunt build-browser-lib
-
-This will generate the correct browser(ified) version of the source in the lib folder
+Optimized for speed in the browser (webworkers etc)
 
 
 
-Usage with webpack
-------------------
+## General information
 
-  just require / import the library (correctly points to ctm-parser.js)
+  - returns raw buffer data wrapped in an RxJs observable (soon to be most.js)
+  - useable both on Node.js & client side 
+
+
+## Usage 
+
+  
+          import parse,  {outputs} from '../lib/ctm-parser'
+
+          let data = fs.readFileSync("mesh.ctm",'binary')
+
+          let ctmObs = parse(data) //we get an observable back
+
+          ctmObs.forEach(function(parsedCTM){
+            //DO what you want with the data wich is something like {vertices,normals,etc}
+            console.log(parsedCTM) 
+          })
+
+
+
+## LICENSE
+
+[The MIT License (MIT)](https://github.com/usco/usco-ctm-parser/blob/master/LICENSE)
+
+- - -
+
+[![Build Status](https://travis-ci.org/usco/usco-ctm-parser.svg?branch=master)](https://travis-ci.org/usco/usco-ctm-parser)
+[![Dependency Status](https://david-dm.org/usco/usco-ctm-parser.svg)](https://david-dm.org/usco/usco-ctm-parser)
+[![devDependency Status](https://david-dm.org/usco/usco-ctm-parser/dev-status.svg)](https://david-dm.org/usco/usco-ctm-parser#info=devDependencies)
