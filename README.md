@@ -26,9 +26,9 @@ Optimized for speed in the browser (webworkers etc)
 
           let ctmObs = parse(data) //we get an observable back
 
-          ctmObs.forEach(function(parsedCTM){
+          ctmObs.forEach(function(parsedGeometry){
             //DO what you want with the data wich is something like {vertices,normals,etc}
-            console.log(parsedCTM) 
+            console.log(parsedGeometry) 
           })
 
 

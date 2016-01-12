@@ -26,7 +26,11 @@
     "browserify": "browserify src/index.js -t babelify -t workerify -t browserify-shim --standalone ctm-parser --exclude rx --outfile lib/ctm-parser.js",
     "mocha": "mocha specs --compilers js:babel-core/register",
     "test": "npm run mocha",
-    "build": "npm run browserify"
+    "build": "npm run browserify",
+    "release": "npm run release-patch",
+    "release-patch": "git checkout master && release patch",
+    "release-minor": "git checkout master && release minor",
+    "release-major": "git checkout master && release major"
   },
   "browserify-shim": {
     "rx": "global:Rx"
