@@ -7,6 +7,7 @@
     "url": "http://github.com/usco/usco-ctm-parser.git"
   },
   "main": "src/index.js",
+  "browser":"lib/ctm-parser.js",
   "dependencies": {
     "composite-detect": "0.0.3",
     "fast.js": "^0.1.1",
