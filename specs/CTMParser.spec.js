@@ -5,7 +5,6 @@ import fs from 'fs'
 import Rx from 'rx'
 import assign from 'fast.js/object/assign'
 
-
 import parse,  {outputs} from '../src/index'
 
 describe("CTM parser tests", () => {
