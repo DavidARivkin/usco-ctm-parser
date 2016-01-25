@@ -25,7 +25,7 @@
   },
   "scripts": {
     "browserify": "browserify src/index.js -t babelify -t workerify -t browserify-shim --standalone ctm-parser --exclude rx --outfile lib/ctm-parser.js",
-    "mocha": "mocha specs --compilers js:babel-core/register",
+    "mocha": "mocha tests --compilers js:babel-core/register",
     "test": "npm run mocha",
     "build": "npm run browserify",
     "release": "npm run release-patch",

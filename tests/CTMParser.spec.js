@@ -11,7 +11,7 @@ describe("CTM parser tests", () => {
   
   it("can parse ctm files", function(done){
     this.timeout(5000)
-    let data = fs.readFileSync("specs/data/hand.ctm")//single file
+    let data = fs.readFileSync("tests/data/hand.ctm")//single file
 
     let obs = parse(data) //we get an observable back
 
