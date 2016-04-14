@@ -15,84 +15,79 @@ import Rx from 'rx'
 
 import CTM from './ctm'
 
-import {ensureArrayBuffer} from './utils'
-import {createModelBuffers} from './parseHelpers'
-//import {parseSteps} from './parseHelpers'
+import { ensureArrayBuffer } from './utils'
+import { createModelBuffers } from './parseHelpers'
+// import {parseSteps} from './parseHelpers'
 
-export const outputs = ["geometry"] //to be able to auto determine data type(s) fetched by parser
-export const inputDataType = "arrayBuffer" //to be able to set required input data type 
+export const outputs = ['geometry'] // to be able to auto determine data type(s) fetched by parser
+export const inputDataType = 'arrayBuffer' // to be able to set required input data type
 
 // Load CTM compressed models
-export default function parse(data, parameters={}){
-
+export default function parse (data, parameters = {}) {
   const defaults = {
-    useWorker: (detectEnv.isBrowser===true)
-    ,offsets: [0]
+    useWorker: (detectEnv.isBrowser === true),
+    offsets: [0]
   }
-  parameters = assign({},defaults,parameters)
+  parameters = assign({}, defaults, parameters)
 
   const {useWorker, offsets} = parameters
   const obs = new Rx.ReplaySubject(1)
 
   let length = 0
-  data = ensureArrayBuffer( data )
-  
+  data = ensureArrayBuffer(data)
+
   let binaryData = new Uint8Array(data)
   let result = null
 
-  //var binaryData = new Uint8Array(data)
-  //var binaryData = new Uint8Array( new ArrayBuffer(data) )
-  //var binaryData = new Buffer( new Uint8Array(data) )
-  
-  //TODO: this is only temporary for NODE.js side
-  //var data = toArrayBuffer(data)
+  // var binaryData = new Uint8Array(data)
+  // var binaryData = new Uint8Array( new ArrayBuffer(data) )
+  // var binaryData = new Buffer( new Uint8Array(data) )
 
-	if ( useWorker ) {
-    //let Worker = require("./worker.js");//Webpack worker!
-    //var worker = new Worker
-		
-    let worker = new Worker( "./worker.js" )//browserify 
+  // TODO: this is only temporary for NODE.js side
+  // var data = toArrayBuffer(data)
 
-		worker.onmessage = function( event ) {
-			let files = event.data
+  if (useWorker) {
+    // let Worker = require("./worker.js");//Webpack worker!
+    // var worker = new Worker
+
+    let worker = new Worker('./worker.js') // browserify
+
+    worker.onmessage = function (event) {
+      let files = event.data
 
       files.forEach(ctmFile => {
-        let geometry = createModelBuffers( ctmFile )
-        //obs.onNext({progress: 1, total:Math.NaN}) 
+        let geometry = createModelBuffers(ctmFile)
+        // obs.onNext({progress: 1, total:Math.NaN})
         obs.onNext(geometry)
       })
-      
-      obs.onNext({progress: 1, total:Math.NaN}) 
+
+      obs.onNext({progress: 1, total: Math.NaN})
       obs.onCompleted()
-		}
-    worker.onerror = function( event ){
+    }
+    worker.onerror = function (event) {
       obs.onError(`filename:${event.filename} lineno: ${event.lineno} error: ${event.message}`)
     }
 
-	  worker.postMessage( { "data": binaryData, "offsets": offsets } )
-	  obs.catch(e=>worker.terminate()) 
-	} 
-  else 
-  {
-		for ( var i = 0; i < offsets.length; i ++ ) {
-      try{
-  			let stream = new CTM.Stream( binaryData )
+    worker.postMessage({ 'data': binaryData, 'offsets': offsets })
+    obs.catch(e => worker.terminate())
+  } else {
+    for ( var i = 0; i < offsets.length; i++) {
+      try {
+        let stream = new CTM.Stream(binaryData)
 
-  			stream.offset = offsets[ i ]
-  			let ctmFile = new CTM.File( stream )
+        stream.offset = offsets[ i ]
+        let ctmFile = new CTM.File(stream)
 
-        let geometry = createModelBuffers( ctmFile )
-        console.log("geometry")
-        //obs.onNext({progress: 1, total:Math.NaN}) 
+        let geometry = createModelBuffers(ctmFile)
+        // obs.onNext({progress: 1, total:Math.NaN})
         obs.onNext(geometry)
-      }catch(error){
+      } catch (error) {
         obs.onError(error)
       }
-		}
-    
-    //obs.onNext({progress: 1, total:Math.NaN}) 
-    //obs.onCompleted()
-	}
-  return obs
-} 
+    }
 
+  // obs.onNext({progress: 1, total:Math.NaN})
+  // obs.onCompleted()
+  }
+  return obs
+}
