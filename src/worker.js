@@ -1,18 +1,15 @@
 import CTM from './ctm'
 
-self.onmessage = function( event ) {
+self.onmessage = function (event) {
+  let files = []
 
-	let files = []
+  for (var i = 0; i < event.data.offsets.length; i++) {
+    let stream = new CTM.Stream(event.data.data)
+    stream.offset = event.data.offsets[ i ]
 
-	for ( var i = 0; i < event.data.offsets.length; i ++ ) {
+    files[ i ] = new CTM.File(stream)
+  }
 
-		let stream = new CTM.Stream( event.data.data )
-		stream.offset = event.data.offsets[ i ]
-
-		files[ i ] = new CTM.File( stream )
-	}
-
-	self.postMessage( files )
-	self.close()
-  
+  self.postMessage(files)
+  self.close()
 }
