@@ -1,4 +1,5 @@
 import CTM from './ctm'
+import { createModelBuffers, unIndexGeometryData } from './parseHelpers'
 
 self.onmessage = function (event) {
   let files = []
@@ -7,7 +8,8 @@ self.onmessage = function (event) {
     let stream = new CTM.Stream(event.data.data)
     stream.offset = event.data.offsets[ i ]
 
-    files[ i ] = new CTM.File(stream)
+    let geometry = unIndexGeometryData(createModelBuffers(new CTM.File(stream)))
+    files[ i ] = geometry
   }
 
   self.postMessage(files)

@@ -55,13 +55,14 @@ export default function parse (data, parameters = {}) {
     worker.onmessage = function (event) {
       let files = event.data
 
-      files.forEach(ctmFile => {
-        let geometry = createModelBuffers(ctmFile)
+      obs.onNext({progress: 1, total: Math.NaN})// FIXME : this is absurd, and should not be done BEFORE the actual end of data
+      //but we need to fix asset managment first
+      files.forEach(geometry => {
+        //let geometry = createModelBuffers(ctmFile)
         // obs.onNext({progress: 1, total:Math.NaN})
         obs.onNext(geometry)
       })
 
-      obs.onNext({progress: 1, total: Math.NaN})
       obs.onCompleted()
     }
     worker.onerror = function (event) {
